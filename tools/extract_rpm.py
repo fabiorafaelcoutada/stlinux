@@ -13,7 +13,7 @@ def extract_cpio(data, dest_dir):
     inodes = {} # Map (dev, ino) -> path
     placeholders = set() # Set of (dev, ino) that are placeholders (size 0)
 
-    dest_dir_abs = os.path.abspath(dest_dir)
+    dest_dir_abs = os.path.realpath(dest_dir)
 
     while offset < len(data):
         if offset + 110 > len(data):
@@ -60,9 +60,9 @@ def extract_cpio(data, dest_dir):
         offset = next_header
 
         full_path = os.path.join(dest_dir, filename.lstrip('/'))
-        full_path_abs = os.path.abspath(full_path)
+        full_path_abs = os.path.realpath(full_path)
 
-        if not full_path_abs.startswith(dest_dir_abs):
+        if os.path.commonpath([dest_dir_abs, full_path_abs]) != dest_dir_abs:
             print(f"Skipping potentially malicious path: {filename}")
             continue
 
@@ -188,7 +188,7 @@ def extract_rpm(rpm_path, dest_dir):
     extract_cpio(decompressed_data, dest_dir)
 
 if __name__ == "__main__":
-    dest_dir = os.path.abspath("toolchain")
+    dest_dir = os.path.realpath("toolchain")
     if not os.path.exists(dest_dir):
         os.makedirs(dest_dir)
 
